@@ -92,7 +92,7 @@ class FilterableDataFrameTableView(QWidget):
         self.setLayout(layout)
     
     def search_edit_text_changed(self, text: str):
-        parts = text.split(":", maxsplit=1)
+        parts = text.split(":", maxsplit=1)  # TODO: columns might contain ":" themselves
         if len(parts) == 2:
             filter_col, text = parts
             df = self.data_frame_table_view.model.get_df(copy=False)  # Read-only access, so no copy required
@@ -160,3 +160,9 @@ class SubmissionsTableView(DataFrameTableView):
             # https://stackoverflow.com/a/281911/8176827
             result = result.replace("/", "\\")
             subprocess.Popen(fr'explorer /select,"{result}"')  # TODO: Windows only
+
+
+class GradingTableView(DataFrameTableView):
+    
+    def __init__(self, df: pd.DataFrame = None, sort_by: Union[str, int] = 0, parent: QWidget = None):
+        super().__init__(df, sort_by, parent)

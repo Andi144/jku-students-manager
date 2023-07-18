@@ -2,9 +2,17 @@ import PySide6.QtWidgets as qw  # TODO: maybe just import everything individuall
 import pandas as pd
 from PySide6.QtCore import Qt, QThreadPool
 
+from graders.python2exercisegrader import Python2ExerciseGrader
+from graders.python2lecturegrader import Python2LectureGrader
 from splitting.split import split_submissions
 from .util import get_moodle_df, get_kusss_df, merge_moodle_and_kusss_dfs, get_download_path
-from .views import StudentsTableView, TutorsTableView, SubmissionsTableView, FilterableDataFrameTableView
+from .views import (
+    StudentsTableView,
+    TutorsTableView,
+    SubmissionsTableView,
+    FilterableDataFrameTableView,
+    GradingTableView
+)
 from .workers import Worker
 
 
@@ -17,7 +25,7 @@ class CourseTab(qw.QWidget):
         # TODO: submissions tab should be optional if the specific course does not have submissions (e.g., lectures)
         #  maybe include a toggle button somewhere that removes/deactivates/disables the submissions tab
         submissions_tab = SubmissionsTab(tutors_df, students_tab.students_table.model)
-        grading_tab = GradingTab()
+        grading_tab = GradingTab(students_tab.students_table.model)
         tabs.addTab(students_tab, "Students")
         tabs.addTab(submissions_tab, "Submissions")
         tabs.addTab(grading_tab, "Grading")
@@ -193,5 +201,60 @@ class SubmissionsTab(qw.QWidget):
 
 class GradingTab(qw.QWidget):
     
-    def __init__(self):
+    def __init__(self, students_model):
         super().__init__()
+        # TODO: model vs tableView vs df? (currently: model, but it is not consistent)
+        self.students_model = students_model
+        self.grading_table = GradingTableView()
+        self.graders = {  # TODO: temp
+            "Python 2 Exercise Grader": Python2ExerciseGrader(),
+            "Python 2 Lecture Grader": Python2LectureGrader(),
+        }
+        self.merged_df = None
+        
+        actions_layout = qw.QHBoxLayout()
+        actions_layout.addWidget(qw.QLabel("Grader:"))
+        grader_combo_box = qw.QComboBox()
+        grader_combo_box.addItems(list(self.graders.keys()))
+        grader_combo_box.currentTextChanged.connect(self.grader_combo_box_text_changed)
+        actions_layout.addWidget(grader_combo_box)
+        manage_graders_button = qw.QPushButton("Manage graders...")
+        actions_layout.addWidget(manage_graders_button)
+        # Add (arbitrary) stretch as last element to place all previous widgets from left to right regardless of
+        # resizing the window
+        actions_layout.addStretch()
+        
+        add_moodle_grading_data_button = qw.QPushButton("Add Moodle grading data...")
+        add_moodle_grading_data_button.setMaximumWidth(160)
+        add_moodle_grading_data_button.clicked.connect(self.add_moodle_grading_data_button_clicked)
+        
+        layout = qw.QVBoxLayout()
+        layout.addLayout(actions_layout)
+        layout.addWidget(FilterableDataFrameTableView(self.grading_table))
+        layout.addWidget(add_moodle_grading_data_button)
+        self.setLayout(layout)
+    
+    def grader_combo_box_text_changed(self, text):
+        if self.merged_df is not None:
+            grader = self.graders[text]
+            grader.set_df(self.merged_df)
+            grading_df = grader.create_grading_file()
+            self.grading_table.set_df(grading_df)
+    
+    # TODO: code duplication
+    def add_moodle_grading_data_button_clicked(self):
+        # Returns tuple of [0] = selected file [1] = matching filter
+        file = qw.QFileDialog.getOpenFileName(
+            self,
+            caption="Open Moodle grading CSV",
+            dir=get_download_path(),  # TODO: temp!!
+            filter="CSV files (*.csv)"
+        )[0]
+        if file:
+            # TODO: hard-coded (default) parameters should be from config file
+            # TODO: inconsistent handling and naming of students_model.get_df (one time "info_df", another time
+            #  "kusss_df" --> choose best fitting, common name)
+            moodle_df = get_moodle_df(file)
+            kusss_df = self.students_model.get_df(copy=False)
+            self.merged_df = merge_moodle_and_kusss_dfs(moodle_df, kusss_df)
+            self.grading_table.set_df(self.merged_df)

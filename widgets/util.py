@@ -300,5 +300,6 @@ def merge_moodle_and_kusss_dfs(
                 f"deliberately only registered for one of the two):\n{diff}")
     # Reorder columns
     df.insert(4, study_id_col, df.pop(study_id_col))  # TODO: hard-coded insertion index
+    df.insert(5, course_id_col, df.pop(course_id_col))  # TODO: hard-coded insertion index
     # TODO: what about "Lecture course ID" and "Exercise course ID" columns? they are dynamic...
     return df
