@@ -13,8 +13,10 @@ from widgets.util import get_rectangular_selection
 
 class DataFrameTableView(QTableView):
     
-    def __init__(self, df: pd.DataFrame, sort_by: Union[str, int] = 0, parent: QWidget = None):
+    def __init__(self, df: pd.DataFrame = None, sort_by: Union[str, int] = 0, parent: QWidget = None):
         super().__init__(parent)
+        if df is None:
+            df = pd.DataFrame()
         self.sort_col_index = df.columns.get_loc(sort_by) if isinstance(sort_by, str) else sort_by
         # TODO: model probably needs to be more specific (e.g., StudentsModel that extends DataFrameModel)
         # TODO: (global remark) move all models outside the view classes?
@@ -112,10 +114,10 @@ class FilterableDataFrameTableView(QWidget):
                 self.search_edit_has_error = False
             self.data_frame_table_view.proxy_model.setFilterRegularExpression(text)
 
- 
+
 class StudentsTableView(DataFrameTableView):
     
-    def __init__(self, df: pd.DataFrame, sort_by: Union[str, int] = 0, parent: QWidget = None):
+    def __init__(self, df: pd.DataFrame = None, sort_by: Union[str, int] = 0, parent: QWidget = None):
         super().__init__(df, sort_by, parent)
         self.doubleClicked.connect(self.double_clicked)
     
@@ -134,7 +136,7 @@ class StudentsTableView(DataFrameTableView):
 
 class TutorsTableView(DataFrameTableView):
     
-    def __init__(self, df: pd.DataFrame, sort_by: Union[str, int] = 0, parent: QWidget = None):
+    def __init__(self, df: pd.DataFrame = None, sort_by: Union[str, int] = 0, parent: QWidget = None):
         super().__init__(df, sort_by, parent)
 
 
@@ -147,7 +149,7 @@ class TutorsTableView(DataFrameTableView):
 class SubmissionsTableView(DataFrameTableView):
     
     def __init__(self, df: pd.DataFrame = None, sort_by: Union[str, int] = 0, parent: QWidget = None):
-        super().__init__(df if df is not None else pd.DataFrame(), sort_by, parent)
+        super().__init__(df, sort_by, parent)
         self.doubleClicked.connect(self.double_clicked)
     
     def double_clicked(self, index: QModelIndex):

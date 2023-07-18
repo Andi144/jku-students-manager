@@ -13,7 +13,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         
         # TODO: temp
-        students_df = pd.DataFrame()
         tutors_df = pd.DataFrame({
             "Name": ["Example Name", "Hello Test", "Gabe the Dog"],
             "Weight": [2, 3, 2],
@@ -25,8 +24,8 @@ class MainWindow(QMainWindow):
         # layout.addWidget(QPushButton("hello"), 1, 1)
         # layout.setContentsMargins(0, 0, 0, 0)
         # layout.setSpacing(0)
-        python1_tab = CourseTab(students_df, tutors_df)
-        handson2_tab = CourseTab(students_df, tutors_df)
+        python1_tab = CourseTab(tutors_df=tutors_df)
+        handson2_tab = CourseTab(tutors_df=tutors_df)
         self.tabs.addTab(python1_tab, "Python 1")
         self.tabs.addTab(handson2_tab, "Hands-on AI II")
         

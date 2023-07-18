@@ -10,7 +10,7 @@ from .workers import Worker
 
 class CourseTab(qw.QWidget):
     
-    def __init__(self, students_df, tutors_df):  # TODO: temp
+    def __init__(self, students_df: pd.DataFrame = None, tutors_df: pd.DataFrame = None):  # TODO: temp
         super().__init__()
         tabs = qw.QTabWidget()
         students_tab = StudentsTab(students_df)
