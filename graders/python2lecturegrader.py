@@ -22,5 +22,6 @@ class Python2LectureGrader(Grader):
             # assert not np.isnan(e1)
             points = e1
         if np.isnan(points):
+            # TODO: maybe add option in view (or before export) to filter -1 values?
             return pd.Series([-1, "no data to create grade"])
         return util.create_grade(points, MAX_POINTS)

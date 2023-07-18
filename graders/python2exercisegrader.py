@@ -22,6 +22,8 @@ THRESHOLD_ALL_A = 0.5
 
 class Python2ExerciseGrader(Grader):
     
+    # TODO: see comment in Python2LectureGrader: maybe instead of filtering them already here, add an option to filter
+    #  afterward?
     def _process_entries(self, df: pd.DataFrame) -> pd.DataFrame:
         assignment_cols = [c for c in df.columns if c.startswith("Assignment:")]
         len_before = len(df)
