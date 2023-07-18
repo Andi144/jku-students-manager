@@ -272,21 +272,14 @@ class Grader:
         ``self._create_grade_row`` and serves as a general processing mechanism. The passed
         pd.DataFrame can be changed to include more information (columns) per entry/student,
         or it can be filtered to exclude entries/students that should not be graded. The
-        processed pd.DataFrame is returned.
-        
-        By default, this method excludes/drops all students without any submission (i.e., all
-        NaN for assignments and quizzes), which means that those students will not be graded
-        at the end (rather than getting a negative grade).
+        processed pd.DataFrame is returned. By default, this method does nothing, i.e.,
+        returns the original pd.DataFrame.
         
         Subclasses are encouraged to change this behavior, if required.
         
         :param df: The pd.DataFrame that should be processed.
         :return: The processed pd.DataFrame.
         """
-        # len_before = len(df)
-        # df = df.dropna(how="all", subset=self.assignment_cols + self.quiz_cols)
-        # if len_before != len(df):
-        #     self._print(f"dropped {len_before - len(df)} entries due to all NaN (no participation at all)")
         return df
     
     def _create_grade_row(self, row: pd.Series) -> pd.Series:
