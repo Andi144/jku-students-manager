@@ -42,24 +42,20 @@ class StudentsTab(qw.QWidget):
         #  not need to keep track of two course ID columns (VL + UE) and we also do not have problems with different
         #  study IDs (i.e., study IDs that are different for the VL and for the UE but for the same student) -> this
         #  would then also simplify to a single button "Add KUSSS participants..." (and merging would also be easier)
-        add_moodle_grading_data_button = qw.QPushButton("Add Moodle participants...")
-        add_moodle_grading_data_button.setMaximumWidth(160)
-        add_moodle_grading_data_button.clicked.connect(self.add_moodle_grading_data_button_clicked)
-        add_kusss_lecture_participants_button = qw.QPushButton("Add KUSSS lecture (VL) participants...")
-        add_kusss_lecture_participants_button.setMaximumWidth(220)
-        add_kusss_lecture_participants_button.clicked.connect(self.add_kusss_lecture_participants_button_clicked)
-        add_kusss_exercise_participants_button = qw.QPushButton("Add KUSSS exercise (UE) participants...")
-        add_kusss_exercise_participants_button.setMaximumWidth(220)
-        add_kusss_exercise_participants_button.clicked.connect(self.add_kusss_exercise_participants_button_clicked)
+        add_moodle_participants_button = qw.QPushButton("Add Moodle participants...")
+        add_moodle_participants_button.setMaximumWidth(160)
+        add_moodle_participants_button.clicked.connect(self.add_moodle_participants_button_clicked)
+        merge_kusss_participants_button = qw.QPushButton("Merge KUSSS participants...")
+        merge_kusss_participants_button.setMaximumWidth(160)
+        merge_kusss_participants_button.clicked.connect(self.merge_kusss_participants_button_clicked)
         button_layout = qw.QHBoxLayout()
-        button_layout.addWidget(add_moodle_grading_data_button)
-        button_layout.addWidget(add_kusss_lecture_participants_button)
-        button_layout.addWidget(add_kusss_exercise_participants_button)
+        button_layout.addWidget(add_moodle_participants_button)
+        button_layout.addWidget(merge_kusss_participants_button)
         layout.addLayout(button_layout)
         
         self.setLayout(layout)
     
-    def add_moodle_grading_data_button_clicked(self):
+    def add_moodle_participants_button_clicked(self):
         # Returns tuple of [0] = selected file [1] = matching filter
         file = qw.QFileDialog.getOpenFileName(
             self,
@@ -73,42 +69,20 @@ class StudentsTab(qw.QWidget):
             df = get_moodle_df(file)
             self.students_table.set_df(df)
     
-    def add_kusss_lecture_participants_button_clicked(self):
-        # Returns tuple of [0] = selected files [1] = matching filter for each file
-        files = qw.QFileDialog.getOpenFileNames(
-            self,
-            caption="Open students KUSSS lecture (VL) participants CSVs",
-            dir=get_download_path(),  # TODO: temp!!
-            filter="CSV files (*.csv)"
-        )[0]
-        if files:
-            # TODO: hard-coded parameters/arguments and values should be from config file
-            course_id_col = "Lecture course ID"
-            kusss_df = get_kusss_df(files, course_id_col=course_id_col)
-            moodle_df = self.students_table.get_df()
-            df = merge_moodle_and_kusss_dfs(
-                moodle_df,
-                kusss_df,
-                course_id_col=course_id_col,
-                warn_if_not_found_in_kusss_participants=True
-            )
-            self.students_table.set_df(df)
-    
     # TODO: code duplication
-    def add_kusss_exercise_participants_button_clicked(self):
+    def merge_kusss_participants_button_clicked(self):
         # Returns tuple of [0] = selected files [1] = matching filters for each file
         files = qw.QFileDialog.getOpenFileNames(
             self,
-            caption="Open students KUSSS exercise (UE) participants CSVs",
+            caption="Open KUSSS participants CSVs",
             dir=get_download_path(),  # TODO: temp!!
             filter="CSV files (*.csv)"
         )[0]
         if files:
             # TODO: hard-coded parameters/arguments and values should be from config file
-            course_id_col = "Exercise course ID"
-            kusss_df = get_kusss_df(files, course_id_col=course_id_col)
+            kusss_df = get_kusss_df(files)
             moodle_df = self.students_table.get_df()
-            df = merge_moodle_and_kusss_dfs(moodle_df, kusss_df, course_id_col=course_id_col)
+            df = merge_moodle_and_kusss_dfs(moodle_df, kusss_df)
             self.students_table.set_df(df)
 
 
