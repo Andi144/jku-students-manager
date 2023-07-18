@@ -1,7 +1,11 @@
+import inspect
+import textwrap
+
 import PySide6.QtWidgets as qw  # TODO: maybe just import everything individually (good for auto-completion, though)
 import pandas as pd
 from PySide6.QtCore import Qt, QThreadPool
 
+from graders.grader import Grader
 from graders.python2exercisegrader import Python2ExerciseGrader
 from graders.python2lecturegrader import Python2LectureGrader
 from splitting.split import split_submissions
@@ -214,11 +218,12 @@ class GradingTab(qw.QWidget):
         
         actions_layout = qw.QHBoxLayout()
         actions_layout.addWidget(qw.QLabel("Grader:"))
-        grader_combo_box = qw.QComboBox()
-        grader_combo_box.addItems(list(self.graders.keys()))
-        grader_combo_box.currentTextChanged.connect(self.grader_combo_box_text_changed)
-        actions_layout.addWidget(grader_combo_box)
+        self.grader_combo_box = qw.QComboBox()
+        self.grader_combo_box.addItems(list(self.graders.keys()))
+        self.grader_combo_box.currentTextChanged.connect(self.grader_combo_box_text_changed)
+        actions_layout.addWidget(self.grader_combo_box)
         manage_graders_button = qw.QPushButton("Manage graders...")
+        manage_graders_button.clicked.connect(self.manage_graders_button_clicked)
         actions_layout.addWidget(manage_graders_button)
         # Add (arbitrary) stretch as last element to place all previous widgets from left to right regardless of
         # resizing the window
@@ -240,6 +245,73 @@ class GradingTab(qw.QWidget):
             grader.set_df(self.merged_df)
             grading_df = grader.create_grading_file()
             self.grading_table.set_df(grading_df)
+    
+    def manage_graders_button_clicked(self):
+        dialog = qw.QDialog(self)
+        dialog.setWindowTitle("Graders")
+        dialog.accepted.connect(lambda: print("ACC"))
+        dialog.rejected.connect(lambda: print("REJ"))
+        
+        # button_box = qw.QDialogButtonBox(qw.QDialogButtonBox.StandardButton.Ok)
+        # button_box.accepted.connect(dialog.accept)
+        # button_box.rejected.connect(dialog.reject)
+        
+        dialog_grader_combo_box = qw.QComboBox()
+        dialog_grader_text_edit = qw.QTextEdit()
+        
+        def dialog_grader_combo_box_text_changed(text):
+            # grader = self.graders[text]
+            # TODO: get source code for the grader "text
+            source_code = f"TODO: source code for grader {text}"
+            dialog_grader_text_edit.setText(source_code)
+        
+        def dialog_grader_text_edit_text_changed():
+            grader = self.graders[dialog_grader_combo_box.currentText()]
+            
+            # TODO: extremely hacky
+            try:
+                # method _create_grade_row(self, row: pd.Series) -> pd.Series must be created
+                # TODO: actually, it does not necessarily have to be "_create_grade_row" (could be any valid method
+                #  name, but we would need to extract this somehow (maybe parse new locals for callables...))
+                source_code = dialog_grader_text_edit.toPlainText()
+                # TODO: save source code to file
+                exec(source_code)
+                # after exec, should be part of locals
+                if "_create_grade_row" in locals():
+                    _create_grade_row_method = locals()["_create_grade_row"]
+                    grader._create_grade_row = _create_grade_row_method.__get__(grader, Grader)
+            except Exception as ex:
+                print(type(ex), ex)  # TODO
+        
+        dialog_grader_text_edit.textChanged.connect(dialog_grader_text_edit_text_changed)
+        
+        dialog_grader_combo_box.addItems(list(self.graders.keys()))
+        dialog_grader_combo_box.currentTextChanged.connect(dialog_grader_combo_box_text_changed)
+        
+        def add_new_grader_button_clicked():
+            grader_name = "debug"  # TODO: get name from dialog or QLineEdit
+            if grader_name in self.graders:
+                print("already exists")  # TODO: error dialog or something like that
+            else:
+                grader = Grader()  # Abstract, must set abstract methods!
+                self.graders[grader_name] = grader
+                dialog_grader_combo_box.addItems([grader_name])
+                dialog_grader_combo_box.setCurrentText(grader_name)
+                self.grader_combo_box.addItems([grader_name])
+        
+        add_new_grader_button = qw.QPushButton("Add new grader...")
+        add_new_grader_button.clicked.connect(add_new_grader_button_clicked)
+        button_layout = qw.QHBoxLayout()
+        button_layout.addWidget(add_new_grader_button)
+        
+        layout = qw.QVBoxLayout()
+        layout.addWidget(dialog_grader_combo_box)
+        layout.addWidget(dialog_grader_text_edit)
+        layout.addLayout(button_layout)
+        # layout.addWidget(message)
+        # layout.addWidget(button_box)
+        dialog.setLayout(layout)
+        dialog.exec()
     
     # TODO: code duplication
     def add_moodle_grading_data_button_clicked(self):
