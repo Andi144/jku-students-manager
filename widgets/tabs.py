@@ -31,9 +31,6 @@ class StudentsTab(qw.QWidget):
     def __init__(self, df: pd.DataFrame):
         super().__init__()
         self.students_table = StudentsTableView(df)
-        self.init_ui()
-    
-    def init_ui(self):
         layout = qw.QVBoxLayout()
         layout.addWidget(FilterableDataFrameTableView(self.students_table))
         
@@ -42,15 +39,16 @@ class StudentsTab(qw.QWidget):
         #  not need to keep track of two course ID columns (VL + UE) and we also do not have problems with different
         #  study IDs (i.e., study IDs that are different for the VL and for the UE but for the same student) -> this
         #  would then also simplify to a single button "Add KUSSS participants..." (and merging would also be easier)
-        add_moodle_participants_button = qw.QPushButton("Add Moodle participants...")
-        add_moodle_participants_button.setMaximumWidth(160)
-        add_moodle_participants_button.clicked.connect(self.add_moodle_participants_button_clicked)
-        merge_kusss_participants_button = qw.QPushButton("Merge KUSSS participants...")
-        merge_kusss_participants_button.setMaximumWidth(160)
-        merge_kusss_participants_button.clicked.connect(self.merge_kusss_participants_button_clicked)
+        self.add_moodle_participants_button = qw.QPushButton("Add Moodle participants...")
+        self.add_moodle_participants_button.setMaximumWidth(180)
+        self.add_moodle_participants_button.clicked.connect(self.add_moodle_participants_button_clicked)
+        self.merge_kusss_participants_button = qw.QPushButton("Merge KUSSS participants...")
+        self.merge_kusss_participants_button.setMaximumWidth(160)
+        self.merge_kusss_participants_button.clicked.connect(self.merge_kusss_participants_button_clicked)
+        self.merge_kusss_participants_button.setEnabled(False)
         button_layout = qw.QHBoxLayout()
-        button_layout.addWidget(add_moodle_participants_button)
-        button_layout.addWidget(merge_kusss_participants_button)
+        button_layout.addWidget(self.add_moodle_participants_button)
+        button_layout.addWidget(self.merge_kusss_participants_button)
         layout.addLayout(button_layout)
         
         self.setLayout(layout)
@@ -68,6 +66,8 @@ class StudentsTab(qw.QWidget):
             # TODO: hard-coded (default) parameters should be from config file
             df = get_moodle_df(file)
             self.students_table.set_df(df)
+            self.add_moodle_participants_button.setText("Replace Moodle participants...")
+            self.merge_kusss_participants_button.setEnabled(True)
     
     # TODO: code duplication
     def merge_kusss_participants_button_clicked(self):
